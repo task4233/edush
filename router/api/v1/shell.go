@@ -2,7 +2,10 @@ package v1
 
 import(
 	"github.com/gin-gonic/gin"
+	"github.com/gorilla/websocket"
 	"os/exec"
+	"log"
+	"fmt"
 )
 
 func PostCmd(c *gin.Context) {
@@ -18,4 +21,8 @@ func PostCmd(c *gin.Context) {
 	c.JSON(200, gin.H{
 		"result": out,
 	})
+}
+
+func GetHome(c *gin.Context) {
+	c.HTML(200, "edush.html",nil)
 }
