@@ -54,6 +54,9 @@ func WsCmd(c *gin.Context) {
 	q := NewCmdQueue()
 	go StdInListner(conn, q)
 	go CmdExec(conn, q)
+
+	out := <- q.StdOut
+	print(out)
 }
 
 // websocketからのコマンドをチャネルで排他制御する。
@@ -70,7 +73,7 @@ func StdInListner(conn *websocket.Conn,que *CmdQueue) {
 }
 
 //pipeで受け取ったコマンドを実行するだけ
-func CmdExec(conn *websocket.Conn, que *CmdQueue) []byte {
+func CmdExec(conn *websocket.Conn, que *CmdQueue) {
 	for {
 		select {
 		case p := <- que.StdIn:
@@ -78,9 +81,9 @@ func CmdExec(conn *websocket.Conn, que *CmdQueue) []byte {
 			out, err := exec.Command("bash", "-c", cmd).Output()
 			if err != nil {
 				log.Println(err)
-				return nil
+				return
 			}
-			return out
+			que.StdOut <- out
 		}
 	}
 }
