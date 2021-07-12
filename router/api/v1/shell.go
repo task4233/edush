@@ -56,7 +56,9 @@ func WsCmd(c *gin.Context) {
 	go CmdExec(conn, q)
 
 	out := <- q.StdOut
-	print(out)
+	c.JSON(200, gin.H{
+		"result": out,
+	})
 }
 
 // websocketからのコマンドをチャネルで排他制御する。
