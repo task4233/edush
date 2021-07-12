@@ -71,12 +71,16 @@ func StdInListner(conn *websocket.Conn,que *CmdQueue) {
 
 //pipeで受け取ったコマンドを実行するだけ
 func CmdExec(conn *websocket.Conn, que *CmdQueue) []byte {
-	p := <- que.StdIn
-	cmd := fmt.Sprintf("%s", p)
-	out, err := exec.Command("bash", "-c", cmd).Output()
-	if err != nil {
-		log.Println(err)
-		return nil
+	for {
+		select {
+		case p := <- que.StdIn:
+			cmd := fmt.Sprintf("%s", p)
+			out, err := exec.Command("bash", "-c", cmd).Output()
+			if err != nil {
+				log.Println(err)
+				return nil
+			}
+			return out
+		}
 	}
-	return out
 }
