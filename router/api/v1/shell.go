@@ -1,21 +1,21 @@
 package v1
 
-import(
+import (
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"github.com/taise-hub/edush/model"
-	"os/exec"
 	"log"
-	"fmt"
+	"os/exec"
 )
 
 func GetHome(c *gin.Context) {
-	c.HTML(200, "edush.html",nil)
+	c.HTML(200, "edush.html", nil)
 }
 
 var upgrader = websocket.Upgrader{
-    ReadBufferSize:  1024,
-    WriteBufferSize: 1024,
+	ReadBufferSize:  1024,
+	WriteBufferSize: 1024,
 }
 
 func WsCmd(c *gin.Context) {
@@ -45,8 +45,7 @@ func StdInListner(conn *websocket.Conn, que *model.CmdQueue) {
 func StdOut(conn *websocket.Conn, que *model.CmdQueue) {
 	for {
 		select {
-		case p := <- que.Pipe:
-			
+		case p := <-que.Pipe:
 			out, err := CmdExec(p)
 			if err != nil {
 				log.Println(err)
@@ -60,7 +59,7 @@ func StdOut(conn *websocket.Conn, que *model.CmdQueue) {
 	}
 }
 
-func CmdExec(p []byte) ([]byte, error){
+func CmdExec(p []byte) ([]byte, error) {
 	cmd := fmt.Sprintf("%s", p)
 	out, err := exec.Command("bash", "-c", cmd).Output()
 	if err != nil {
