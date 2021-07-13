@@ -3,6 +3,7 @@ package v1
 import(
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
+	"github.com/taise-hub/edush/model"
 	"os/exec"
 	"log"
 	"fmt"
@@ -11,18 +12,6 @@ import(
 func GetHome(c *gin.Context) {
 	c.HTML(200, "edush.html",nil)
 }
-
-//QUEUE=====================================================
-type CmdQueue struct {
-	Pipe chan []byte
-}
-
-func NewCmdQueue() *CmdQueue {
-	return &CmdQueue{
-		Pipe: make(chan []byte),
-	}
-}
-//=========================================================
 
 var upgrader = websocket.Upgrader{
     ReadBufferSize:  1024,
@@ -34,13 +23,13 @@ func WsCmd(c *gin.Context) {
 	if err != nil {
 		log.Println(err)
 	}
-	q := NewCmdQueue()
+	q := model.NewCmdQueue()
 	go StdInListner(conn, q)
-	go CmdExec(conn, q)
+	go StdOut(conn, q)
 }
 
 // websocketからのコマンドをチャネルで排他制御する。
-func StdInListner(conn *websocket.Conn, que *CmdQueue) {
+func StdInListner(conn *websocket.Conn, que *model.CmdQueue) {
 	for {
 		_, p, err := conn.ReadMessage()
 		if err != nil {
@@ -53,12 +42,12 @@ func StdInListner(conn *websocket.Conn, que *CmdQueue) {
 }
 
 //pipeで受け取ったコマンドを実行するだけ
-func CmdExec(conn *websocket.Conn, que *CmdQueue) {
+func StdOut(conn *websocket.Conn, que *model.CmdQueue) {
 	for {
 		select {
 		case p := <- que.Pipe:
-			cmd := fmt.Sprintf("%s", p)
-			out, err := exec.Command("bash", "-c", cmd).Output()
+			
+			out, err := CmdExec(p)
 			if err != nil {
 				log.Println(err)
 				return
@@ -69,4 +58,13 @@ func CmdExec(conn *websocket.Conn, que *CmdQueue) {
 			}
 		}
 	}
+}
+
+func CmdExec(p []byte) ([]byte, error){
+	cmd := fmt.Sprintf("%s", p)
+	out, err := exec.Command("bash", "-c", cmd).Output()
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
