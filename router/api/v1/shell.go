@@ -8,35 +8,18 @@ import(
 	"fmt"
 )
 
-func PostCmd(c *gin.Context) {
-	cmd := c.PostForm("cmd")
-	// judge.Judge(cmd)
-	// judgeで判定。正解だったら勝ち、その他のユーザに負けを通知する。
-	out, err := exec.Command("bash", "-c", cmd).Output()
-	if err != nil {
-		c.JSON(500, gin.H{
-			"result": err,
-		})
-	}
-	c.JSON(200, gin.H{
-		"result": out,
-	})
-}
-
 func GetHome(c *gin.Context) {
 	c.HTML(200, "edush.html",nil)
 }
 
 //QUEUE=====================================================
 type CmdQueue struct {
-	StdIn chan []byte
-	StdOut chan []byte
+	Pipe chan []byte
 }
 
 func NewCmdQueue() *CmdQueue {
 	return &CmdQueue{
-		StdIn: make(chan []byte),
-		StdOut: make(chan []byte),
+		Pipe: make(chan []byte),
 	}
 }
 //=========================================================
@@ -54,22 +37,17 @@ func WsCmd(c *gin.Context) {
 	q := NewCmdQueue()
 	go StdInListner(conn, q)
 	go CmdExec(conn, q)
-
-	out := <- q.StdOut
-	c.JSON(200, gin.H{
-		"result": out,
-	})
 }
 
 // websocketからのコマンドをチャネルで排他制御する。
-func StdInListner(conn *websocket.Conn,que *CmdQueue) {
+func StdInListner(conn *websocket.Conn, que *CmdQueue) {
 	for {
 		_, p, err := conn.ReadMessage()
 		if err != nil {
 			log.Println(err)
 			return
 		}
-		que.StdIn <- p
+		que.Pipe <- p
 		defer conn.Close()
 	}
 }
@@ -78,14 +56,17 @@ func StdInListner(conn *websocket.Conn,que *CmdQueue) {
 func CmdExec(conn *websocket.Conn, que *CmdQueue) {
 	for {
 		select {
-		case p := <- que.StdIn:
+		case p := <- que.Pipe:
 			cmd := fmt.Sprintf("%s", p)
 			out, err := exec.Command("bash", "-c", cmd).Output()
 			if err != nil {
 				log.Println(err)
 				return
 			}
-			que.StdOut <- out
+			if err := conn.WriteMessage(websocket.TextMessage, out); err != nil {
+				log.Println(err)
+				return
+			}
 		}
 	}
 }
