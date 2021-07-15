@@ -76,35 +76,23 @@ func DockerRunSample() {
 
 
 //コンテナを起動する。
-func Run(ctx context.Context, cli *client.Client) (string, error) {
+func Run(ctx context.Context,name string, cli *client.Client) error {
 	cc := &container.Config{
 		Image:        "nginx",
-		ExposedPorts: nat.PortSet{nat.Port("80"): struct{}{}},
 	}
 	hc := &container.HostConfig{
-		PortBindings: nat.PortMap{
-			nat.Port("80"): []nat.PortBinding{nat.PortBinding{HostPort: "8080"}},
-		},
 		AutoRemove: true,
 	}
-	body, err := cli.ContainerCreate(ctx, cc, hc, nil, nil, "test_container")
+	body, err := cli.ContainerCreate(ctx, cc, hc, nil, nil, name)
 	if err != nil {
-		return "", err
+		return err
 	}
-
 	if err := cli.ContainerStart(ctx, body.ID, types.ContainerStartOptions{}); err != nil {
-		return "", err
+		return err
 	}
 
-	return body.ID, nil
+	return nil
 }
-/**課題
-ユーザに紐つける必要があるもの
-- コンテナのID
-- カレントディレクトリ
-**/
-
-//マンドを引数にとってコンテナ内でそのコマンドを実行させる方法例
 /**
 id: コンテナID 名前でもok
 **/
@@ -133,8 +121,15 @@ func Exec(ctx context.Context, cmd []string, id string, cli *client.Client) erro
 		log.Println("connection closed")
 	}()
 
-	//この辺りは書き換える必要性あり
+	//後でresp.Readerを返すようにしよう
 	stdcopy.StdCopy(os.Stdout, os.Stderr, resp.Reader)
 	
 	return nil
 }
+
+
+/**課題
+ユーザに紐つける必要があるもの
+- コンテナのID→(userID+乱数)でコンテナ立てるようにする。
+- カレントディレクトリ→TODO
+**/

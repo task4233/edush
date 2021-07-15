@@ -16,24 +16,15 @@ func Test_DockerVersion(t *testing.T) {
 }
 
 func Test_DockerRun(t *testing.T) {
-	DockerRunSample()
-}
-
-func Test_Exec(t *testing.T) {
 	type args struct {
-		cmd []string
+		name string
 	}
 	tests := map[string]struct {
 		args args
 	}{
-		"ls":{
-			args: args{
-				cmd: []string{"ls"},
-			},
-		},
-		"ls -a":{
-			args: args{
-				cmd: []string{"ls", "-a"},
+		"コンテナの作成例": {
+			args: args {
+				name: "test",
 			},
 		},
 	}
@@ -41,8 +32,42 @@ func Test_Exec(t *testing.T) {
 		t.Run(tName, func(t *testing.T) {
 			ctx := context.Background()
 			cli, _ := client.NewClientWithOpts(client.FromEnv)
-			_, _ = Run(ctx, cli)
-			if err := Exec(ctx, test.args.cmd, "test_container", cli); err != nil {
+			
+			if err := Run(ctx, test.args.name, cli); err != nil {
+				panic(err)
+			}
+		})
+	}
+}
+
+func Test_Exec(t *testing.T) {
+	type args struct {
+		cmd []string
+		name string
+	}
+	tests := map[string]struct {
+		args args
+	}{
+		"ls":{
+			args: args{
+				cmd: []string{"ls"},
+				name: "test1",
+			},
+		},
+		"ls -a":{
+			args: args{
+				cmd: []string{"ls", "-a"},
+				name: "test2",
+			},
+		},
+	}
+	for tName, test := range tests {
+		t.Run(tName, func(t *testing.T) {
+			ctx := context.Background()
+			cli, _ := client.NewClientWithOpts(client.FromEnv)
+			_ = Run(ctx, test.args.name, cli)
+			
+			if err := Exec(ctx, test.args.cmd, test.args.name, cli); err != nil {
 				panic(err)
 			}
 		})
