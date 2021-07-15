@@ -14,5 +14,5 @@ func Test_DockerVersion(t *testing.T) {
 }
 
 func Test_DockerRun(t *testing.T) {
-	DockerRun()
+	DockerRunSample()
 }
