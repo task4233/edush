@@ -76,7 +76,7 @@ func DockerRunSample() {
 
 
 //コンテナを起動する。
-func DockerRun(ctx context.Context, cli *client.Client) (string, error) {
+func Run(ctx context.Context, cli *client.Client) (string, error) {
 	cc := &container.Config{
 		Image:        "nginx",
 		ExposedPorts: nat.PortSet{nat.Port("80"): struct{}{}},
@@ -108,7 +108,7 @@ func DockerRun(ctx context.Context, cli *client.Client) (string, error) {
 /**
 id: コンテナID 名前でもok
 **/
-func DockerExec(ctx context.Context, cmd []string, id string, cli *client.Client) error {
+func Exec(ctx context.Context, cmd []string, id string, cli *client.Client) error {
 	
 	ec := &types.ExecConfig{
 		AttachStdout: true,
