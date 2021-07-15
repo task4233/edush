@@ -4,11 +4,14 @@ import (
 	"context"
 	"fmt"
 	"time"
+	"log"
+	"os"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
+	"github.com/docker/docker/pkg/stdcopy"
 )
 
 // $ docker ps
@@ -44,13 +47,11 @@ func DockerRunSample() {
 	if err != nil {
 		panic(err)
 	}
-	//imageの設定
 	cc := &container.Config{
 		Image:        "nginx",
 		ExposedPorts: nat.PortSet{nat.Port("80"): struct{}{}},
 	}
 
-	//ホストの設定
 	hc := &container.HostConfig{
 		// --port 8080:80
 		PortBindings: nat.PortMap{
@@ -75,8 +76,7 @@ func DockerRunSample() {
 
 
 //コンテナを起動する。
-func DockerRun(cli *client.Client) (string, error) {
-	bg := context.Background()
+func DockerRun(ctx context.Context, cli *client.Client) (string, error) {
 	cc := &container.Config{
 		Image:        "nginx",
 		ExposedPorts: nat.PortSet{nat.Port("80"): struct{}{}},
@@ -87,14 +87,15 @@ func DockerRun(cli *client.Client) (string, error) {
 		},
 		AutoRemove: true,
 	}
-	body, err := cli.ContainerCreate(bg, cc, hc, nil, nil, "test_container")
+	body, err := cli.ContainerCreate(ctx, cc, hc, nil, nil, "test_container")
 	if err != nil {
 		return "", err
 	}
 
-	if err := cli.ContainerStart(bg, body.ID, types.ContainerStartOptions{}); err != nil {
+	if err := cli.ContainerStart(ctx, body.ID, types.ContainerStartOptions{}); err != nil {
 		return "", err
 	}
+
 	return body.ID, nil
 }
 /**課題
@@ -105,27 +106,35 @@ func DockerRun(cli *client.Client) (string, error) {
 
 //マンドを引数にとってコンテナ内でそのコマンドを実行させる方法例
 /**
-id: コンテナID DockerRun()の戻り値とか
+id: コンテナID 名前でもok
 **/
-func DockerExec(id string, cli *client.Client) error {
+func DockerExec(ctx context.Context, cmd []string, id string, cli *client.Client) error {
 	
 	ec := &types.ExecConfig{
-		User: "hoge",
-		Privileged: false,
-		Tty: true,
+		AttachStdout: true,
+		AttachStderr: true,
 		WorkingDir: "/",
-		Cmd: []string{"ls", "-a"},
+		Cmd: cmd,
 	}
-	idResponse, err := cli.ContainerExecCreate(context.Background(), id, *ec)
+	
+	idResp, err := cli.ContainerExecCreate(ctx, id, *ec)
 	if err != nil {
 		return err
 	}
-	execStartCheck := types.ExecStartCheck{
-		Detach: true,
-		Tty:    false,
-	}
-	if err = cli.ContainerExecStart(context.Background(), idResponse.ID, execStartCheck); err != nil {
+
+	resp, err := cli.ContainerExecAttach(ctx, idResp.ID, types.ExecStartCheck{})
+	if err != nil {
 		return err
 	}
+	defer func() {
+		if err := resp.Conn.Close(); err != nil {
+			log.Panic(err)
+		}
+		log.Println("connection closed")
+	}()
+
+	//この辺りは書き換える必要性あり
+	stdcopy.StdCopy(os.Stdout, os.Stderr, resp.Reader)
+	
 	return nil
 }
