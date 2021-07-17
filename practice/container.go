@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"time"
 	"log"
-	"os"
+	"bufio"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
-	"github.com/docker/docker/pkg/stdcopy"
+	// "github.com/docker/docker/pkg/stdcopy"
 )
 
 // $ docker ps
@@ -96,7 +96,7 @@ func Run(ctx context.Context,name string, cli *client.Client) error {
 /**
 id: コンテナID 名前でもok
 **/
-func Exec(ctx context.Context, cmd []string, id string, cli *client.Client) error {
+func Exec(ctx context.Context, cmd []string, id string, cli *client.Client) (*bufio.Reader, error) {
 	
 	ec := &types.ExecConfig{
 		AttachStdout: true,
@@ -107,12 +107,12 @@ func Exec(ctx context.Context, cmd []string, id string, cli *client.Client) erro
 	
 	idResp, err := cli.ContainerExecCreate(ctx, id, *ec)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	resp, err := cli.ContainerExecAttach(ctx, idResp.ID, types.ExecStartCheck{})
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer func() {
 		if err := resp.Conn.Close(); err != nil {
@@ -121,10 +121,7 @@ func Exec(ctx context.Context, cmd []string, id string, cli *client.Client) erro
 		log.Println("connection closed")
 	}()
 
-	//後でresp.Readerを返すようにしよう
-	stdcopy.StdCopy(os.Stdout, os.Stderr, resp.Reader)
-	
-	return nil
+	return resp.Reader, nil
 }
 
 

@@ -67,7 +67,7 @@ func Test_Exec(t *testing.T) {
 			cli, _ := client.NewClientWithOpts(client.FromEnv)
 			_ = Run(ctx, test.args.name, cli)
 			
-			if err := Exec(ctx, test.args.cmd, test.args.name, cli); err != nil {
+			if _, err := Exec(ctx, test.args.cmd, test.args.name, cli); err != nil {
 				panic(err)
 			}
 		})
