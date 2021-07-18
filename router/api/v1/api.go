@@ -5,11 +5,20 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
+	"github.com/docker/docker/client"
 	"github.com/taise-hub/edush/model"
 	"github.com/taise-hub/edush/shell"
+	"github.com/taise-hub/edush/container"
 )
 
 func GetHome(c *gin.Context) {
+	cli, err := client.NewClientWithOpts(client.FromEnv)
+	if err != nil {
+		return
+	}
+	if err := container.Run("hogehoge_container", cli); err != nil {
+		return
+	}
 	c.HTML(200, "edush.html", nil)
 }
 
