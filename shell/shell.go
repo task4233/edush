@@ -2,14 +2,15 @@ package shell
 
 import (
 	"fmt"
+	"io/ioutil"
 	"log"
-	"os/exec"
 
+	"github.com/docker/docker/client"
 	"github.com/gorilla/websocket"
+	"github.com/taise-hub/edush/container"
 	"github.com/taise-hub/edush/model"
 )
 
-// websocketからのコマンドをチャネルで排他制御する。
 func StdInListner(conn *websocket.Conn, que *model.CmdQueue) {
 	for {
 		_, p, err := conn.ReadMessage()
@@ -17,22 +18,20 @@ func StdInListner(conn *websocket.Conn, que *model.CmdQueue) {
 			log.Println(err)
 			return
 		}
-		que.Pipe <- p
-		defer conn.Close()
+		cmdResult, err := cmdExecOnContainer("hogehoge_container", p)
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		que.Pipe <- cmdResult
 	}
 }
 
-//pipeで受け取ったコマンドを実行するだけ
 func StdOut(conn *websocket.Conn, que *model.CmdQueue) {
 	for {
 		select {
-		case p := <-que.Pipe:
-			out, err := cmdExec(p)
-			if err != nil {
-				log.Println(err)
-				return
-			}
-			if err := conn.WriteMessage(websocket.TextMessage, out); err != nil {
+		case output := <-que.Pipe:
+			if err := conn.WriteMessage(websocket.TextMessage, output); err != nil {
 				log.Println(err)
 				return
 			}
@@ -40,11 +39,21 @@ func StdOut(conn *websocket.Conn, que *model.CmdQueue) {
 	}
 }
 
-func cmdExec(p []byte) ([]byte, error) {
-	cmd := fmt.Sprintf("%s", p)
-	out, err := exec.Command("bash", "-c", cmd).Output()
+func cmdExecOnContainer(name string, p []byte) ([]byte, error) {
+	cli, err := client.NewClientWithOpts(client.FromEnv)
 	if err != nil {
+		log.Println(err)
 		return nil, err
 	}
-	return out, nil
+	reader, err := container.Exec(name, fmt.Sprintf("%s", p), cli)
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+	output, err := ioutil.ReadAll(reader)
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+	return output, nil
 }

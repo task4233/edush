@@ -1,22 +1,17 @@
 package container
 
 import (
+	"bufio"
 	"context"
-	// "fmt"
-	// "time"
-	// "log"
-	// "bufio"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
-	// "github.com/docker/go-connections/nat"
-	// "github.com/docker/docker/pkg/stdcopy"
 )
 
 func Run(name string, cli *client.Client) error {
 	cc := &container.Config{
-		Image:        "nginx",
+		Image: "nginx",
 	}
 	hc := &container.HostConfig{
 		AutoRemove: true,
@@ -30,4 +25,25 @@ func Run(name string, cli *client.Client) error {
 	}
 
 	return nil
+}
+
+func Exec(name string, cmd string, cli *client.Client) (*bufio.Reader, error) {
+
+	cmds := []string{"/bin/bash", "-c", cmd}
+	ec := &types.ExecConfig{
+		AttachStdout: true,
+		AttachStderr: true,
+		WorkingDir:   "/",
+		Cmd:          cmds,
+	}
+	idResp, err := cli.ContainerExecCreate(context.Background(), name, *ec)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := cli.ContainerExecAttach(context.Background(), idResp.ID, types.ExecStartCheck{})
+	if err != nil {
+		return nil, err
+	}
+	return resp.Reader, nil
 }
