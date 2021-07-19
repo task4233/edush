@@ -3,12 +3,12 @@ package v1
 import (
 	"log"
 
+	"github.com/docker/docker/client"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
-	"github.com/docker/docker/client"
+	"github.com/taise-hub/edush/container"
 	"github.com/taise-hub/edush/model"
 	"github.com/taise-hub/edush/shell"
-	"github.com/taise-hub/edush/container"
 )
 
 func GetHome(c *gin.Context) {
@@ -33,34 +33,34 @@ func WsCmd(c *gin.Context) {
 		log.Println(err)
 	}
 	q := model.NewCmdQueue()
-	go StdInListner(conn, q)
-	go StdOut(conn, q)
-}
-
-func StdInListner(conn *websocket.Conn, que *model.CmdQueue) {
-	for {
-		_, p, err := conn.ReadMessage()
-		if err != nil {
-			log.Println(err)
-			return
+	go func() {
+		for {
+			execResult := StdInListner(conn)
+			q.ResultPipe <- execResult
 		}
-		execResult, err := shell.CmdExecOnContainer("hogehoge_container", p)
-		if err != nil {
-			log.Println(err)
-			return
-		}
-		que.ResultPipe <- execResult
-	}
-}
+	}()
 
-func StdOut(conn *websocket.Conn, que *model.CmdQueue) {
 	for {
 		select {
-		case execResult := <-que.ResultPipe:
+		case execResult := <-q.ResultPipe:
 			if err := conn.WriteMessage(websocket.TextMessage, execResult.StdOut); err != nil {
 				log.Println(err)
 				return
 			}
 		}
 	}
+}
+
+func StdInListner(conn *websocket.Conn) model.ExecResult {
+	_, p, err := conn.ReadMessage()
+	if err != nil {
+		log.Println(err)
+		return model.ExecResult{}
+	}
+	execResult, err := shell.CmdExecOnContainer("hogehoge_container", p)
+	if err != nil {
+		log.Println(err)
+		return model.ExecResult{}
+	}
+	return execResult
 }
