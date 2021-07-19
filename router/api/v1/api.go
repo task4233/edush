@@ -32,17 +32,17 @@ func WsCmd(c *gin.Context) {
 	if err != nil {
 		log.Println(err)
 	}
-	q := model.NewCmdQueue()
+	q :=  make(chan model.ExecResult)
 	go func() {
 		for {
 			execResult := StdInListner(conn)
-			q.ResultPipe <- execResult
+			q <- execResult
 		}
 	}()
 
 	for {
 		select {
-		case execResult := <-q.ResultPipe:
+		case execResult := <-q:
 			if err := conn.WriteMessage(websocket.TextMessage, execResult.StdOut); err != nil {
 				log.Println(err)
 				return
