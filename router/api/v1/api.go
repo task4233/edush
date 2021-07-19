@@ -44,20 +44,20 @@ func StdInListner(conn *websocket.Conn, que *model.CmdQueue) {
 			log.Println(err)
 			return
 		}
-		cmdResult, err := shell.CmdExecOnContainer("hogehoge_container", p)
+		execResult, err := shell.CmdExecOnContainer("hogehoge_container", p)
 		if err != nil {
 			log.Println(err)
 			return
 		}
-		que.Pipe <- cmdResult
+		que.ResultPipe <- execResult
 	}
 }
 
 func StdOut(conn *websocket.Conn, que *model.CmdQueue) {
 	for {
 		select {
-		case output := <-que.Pipe:
-			if err := conn.WriteMessage(websocket.TextMessage, output); err != nil {
+		case execResult := <-que.ResultPipe:
+			if err := conn.WriteMessage(websocket.TextMessage, execResult.StdOut); err != nil {
 				log.Println(err)
 				return
 			}

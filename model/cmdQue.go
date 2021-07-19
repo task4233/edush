@@ -1,11 +1,11 @@
 package model
 
 type CmdQueue struct {
-	Pipe chan []byte
+	ResultPipe chan ExecResult
 }
 
 func NewCmdQueue() *CmdQueue {
 	return &CmdQueue{
-		Pipe: make(chan []byte),
+		ResultPipe: make(chan ExecResult),
 	}
 }
