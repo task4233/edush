@@ -33,6 +33,34 @@ func WsCmd(c *gin.Context) {
 		log.Println(err)
 	}
 	q := model.NewCmdQueue()
-	go shell.StdInListner(conn, q)
-	go shell.StdOut(conn, q)
+	go StdInListner(conn, q)
+	go StdOut(conn, q)
+}
+
+func StdInListner(conn *websocket.Conn, que *model.CmdQueue) {
+	for {
+		_, p, err := conn.ReadMessage()
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		cmdResult, err := shell.CmdExecOnContainer("hogehoge_container", p)
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		que.Pipe <- cmdResult
+	}
+}
+
+func StdOut(conn *websocket.Conn, que *model.CmdQueue) {
+	for {
+		select {
+		case output := <-que.Pipe:
+			if err := conn.WriteMessage(websocket.TextMessage, output); err != nil {
+				log.Println(err)
+				return
+			}
+		}
+	}
 }

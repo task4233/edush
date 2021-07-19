@@ -6,40 +6,11 @@ import (
 	"log"
 
 	"github.com/docker/docker/client"
-	"github.com/gorilla/websocket"
 	"github.com/taise-hub/edush/container"
-	"github.com/taise-hub/edush/model"
 )
 
-func StdInListner(conn *websocket.Conn, que *model.CmdQueue) {
-	for {
-		_, p, err := conn.ReadMessage()
-		if err != nil {
-			log.Println(err)
-			return
-		}
-		cmdResult, err := cmdExecOnContainer("hogehoge_container", p)
-		if err != nil {
-			log.Println(err)
-			return
-		}
-		que.Pipe <- cmdResult
-	}
-}
 
-func StdOut(conn *websocket.Conn, que *model.CmdQueue) {
-	for {
-		select {
-		case output := <-que.Pipe:
-			if err := conn.WriteMessage(websocket.TextMessage, output); err != nil {
-				log.Println(err)
-				return
-			}
-		}
-	}
-}
-
-func cmdExecOnContainer(name string, p []byte) ([]byte, error) {
+func CmdExecOnContainer(name string, p []byte) ([]byte, error) {
 	cli, err := client.NewClientWithOpts(client.FromEnv)
 	if err != nil {
 		log.Println(err)
@@ -56,5 +27,6 @@ func cmdExecOnContainer(name string, p []byte) ([]byte, error) {
 		log.Println(err)
 		return nil, err
 	}
+	fmt.Printf("%v", output)
 	return output, nil
 }
