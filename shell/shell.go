@@ -50,6 +50,7 @@ func cmdExecOnContainer(name string, p []byte) ([]byte, error) {
 		log.Println(err)
 		return nil, err
 	}
+	//TODO: stdout, stderr両方返すようにする。
 	output, err := ioutil.ReadAll(reader)
 	if err != nil {
 		log.Println(err)
