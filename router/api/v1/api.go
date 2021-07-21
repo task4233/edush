@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"github.com/taise-hub/edush/container"
+	"github.com/taise-hub/edush/judge"
 	"github.com/taise-hub/edush/model"
 	"github.com/taise-hub/edush/shell"
 )
@@ -32,7 +33,7 @@ func WsCmd(c *gin.Context) {
 	if err != nil {
 		log.Println(err)
 	}
-	q :=  make(chan model.ExecResult)
+	q := make(chan model.ExecResult)
 	go func() {
 		for {
 			execResult := StdInListner(conn)
@@ -67,8 +68,9 @@ func StdInListner(conn *websocket.Conn) model.ExecResult {
 
 func Judge(c *gin.Context) {
 	ans := c.PostForm("answer")
+	result := judge.Problem1(ans)
 	c.JSON(200, gin.H{
 		"message": ans,
-		"result": "ok",
+		"result":  result,
 	})
 }
