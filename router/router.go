@@ -10,5 +10,6 @@ func Init() *gin.Engine {
 	r.LoadHTMLGlob("templates/*")
 	r.GET("/", v1.GetHome)
 	r.GET("/ws", v1.WsCmd)
+	r.POST("/judge",v1.Judge)
 	return r
 }

@@ -64,3 +64,11 @@ func StdInListner(conn *websocket.Conn) model.ExecResult {
 	}
 	return execResult
 }
+
+func Judge(c *gin.Context) {
+	ans := c.PostForm("answer")
+	c.JSON(200, gin.H{
+		"message": ans,
+		"result": "ok",
+	})
+}
