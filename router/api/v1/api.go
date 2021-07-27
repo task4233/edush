@@ -20,7 +20,7 @@ func GetHome(c *gin.Context) {
 	if err := container.Run("hogehoge_container", cli); err != nil {
 		return
 	}
-	c.HTML(200, "edush.html", nil)
+	c.HTML(200, "index.html", nil)
 }
 
 var upgrader = websocket.Upgrader{

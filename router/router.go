@@ -7,6 +7,7 @@ import (
 
 func Init() *gin.Engine {
 	r := gin.Default()
+	r.Static("/assets", "./assets")
 	r.LoadHTMLGlob("templates/*")
 	r.GET("/", v1.GetHome)
 	r.GET("/ws", v1.WsCmd)
