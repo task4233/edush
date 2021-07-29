@@ -2,9 +2,11 @@ package v1
 
 import (
 	"log"
+	"github.com/google/uuid"
 
 	"github.com/docker/docker/client"
 	"github.com/gin-gonic/gin"
+	"github.com/gin-contrib/sessions"
 	"github.com/gorilla/websocket"
 	"github.com/taise-hub/edush/container"
 	"github.com/taise-hub/edush/judge"
@@ -13,13 +15,21 @@ import (
 )
 
 func GetHome(c *gin.Context) {
+	session := sessions.Default(c)
+	id := session.Get("id").(string)
+
 	cli, err := client.NewClientWithOpts(client.FromEnv)
 	if err != nil {
+		log.Print(err)
 		return
 	}
-	if err := container.Run("hogehoge_container", cli); err != nil {
-		return
+	if exist := container.IsContainerExists(id, cli); !exist {
+		if err := container.Run(id, cli); err != nil {
+			log.Print(err)
+			return
+		}
 	}
+
 	c.HTML(200, "index.html", nil)
 }
 
@@ -34,9 +44,11 @@ func WsCmd(c *gin.Context) {
 		log.Println(err)
 	}
 	q := make(chan model.ExecResult)
+	session := sessions.Default(c)
+	id := session.Get("id").(string)
 	go func() {
 		for {
-			execResult := StdInListner(conn)
+			execResult := StdInListner(conn, id)
 			q <- execResult
 		}
 	}()
@@ -52,13 +64,13 @@ func WsCmd(c *gin.Context) {
 	}
 }
 
-func StdInListner(conn *websocket.Conn) model.ExecResult {
+func StdInListner(conn *websocket.Conn, id string) model.ExecResult {
 	_, p, err := conn.ReadMessage()
 	if err != nil {
 		log.Println(err)
 		return model.ExecResult{}
 	}
-	execResult, err := shell.CmdExecOnContainer("hogehoge_container", p)
+	execResult, err := shell.CmdExecOnContainer(id, p)
 	if err != nil {
 		log.Println(err)
 		return model.ExecResult{}
@@ -73,4 +85,24 @@ func Judge(c *gin.Context) {
 		"message": ans,
 		"result":  result,
 	})
+}
+
+func GetJoin(c *gin.Context) {
+	session := sessions.Default(c)
+	if session.Get("id") == nil {
+		c.HTML(200, "join.html", nil)
+	}
+	c.Redirect(302, "/")
+}
+
+func PostClientInfo(c *gin.Context) {
+	session := sessions.Default(c)
+	if session.Get("id") == nil {
+		name := c.PostForm("name")
+		id := name + "-" + uuid.NewString()
+		log.Print(id)
+		session.Set("id", id)
+		session.Save()	
+	}
+	c.Redirect(302, "/")
 }

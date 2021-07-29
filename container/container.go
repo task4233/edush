@@ -3,11 +3,15 @@ package container
 import (
 	"bufio"
 	"context"
-
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 )
+
+func IsContainerExists(name string, cli *client.Client) bool {
+	_, err := cli.ContainerInspect(context.Background(), name)
+	return !client.IsErrNotFound(err)
+}
 
 func Run(name string, cli *client.Client) error {
 	cc := &container.Config{
