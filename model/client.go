@@ -3,14 +3,15 @@ package model
 import (
 	"log"
 	"github.com/gorilla/websocket"
+	"github.com/taise-hub/edush/shell"
 )
 
 type Client struct {
 
-	Name string //コンテナを識別するためのID
+	Name string
 	Conn *websocket.Conn
 	Room *Room
-	Message chan []byte
+	Message chan shell.ExecResult
 }
 
 func NewClient(name string, conn *websocket.Conn, room *Room) *Client {
@@ -18,7 +19,7 @@ func NewClient(name string, conn *websocket.Conn, room *Room) *Client {
 		Name: name,
 		Conn: conn,
 		Room: room,
-		Message: make(chan []byte),
+		Message: make(chan shell.ExecResult),
 	}
 }
 
@@ -32,19 +33,20 @@ func (c *Client) joinRoom() bool {
 
 func (c *Client) read() {
 	for {
-		_, msg, err := c.Conn.ReadMessage()
+		_, p, err := c.Conn.ReadMessage()
 		if err != nil {
 			log.Println(err)
 			break
-		} 
-		c.Room.Forward <- msg
+		}
+		execResult, err := shell.CmdExecOnContainer(c.Name, p)
+		c.Room.Forward <- execResult
 	}
 }
 
 func (c *Client) write() {
 	for {
-		msg := <- c.Message
-		if err := c.Conn.WriteMessage(websocket.TextMessage, msg); err != nil {
+		execResult := <- c.Message
+		if err := c.Conn.WriteMessage(websocket.TextMessage, execResult.StdOut); err != nil {
 			break
 		}
 	}

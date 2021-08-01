@@ -10,12 +10,17 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/stdcopy"
 	"github.com/taise-hub/edush/container"
-	"github.com/taise-hub/edush/model"
 	"github.com/taise-hub/edush/redis"
 )
 
-func CmdExecOnContainer(name string, p []byte) (model.ExecResult, error) {
-	var execResult model.ExecResult
+
+type ExecResult struct {
+	StdOut []byte
+	StdErr []byte
+}
+
+func CmdExecOnContainer(name string, p []byte) (ExecResult, error) {
+	var execResult ExecResult
 	cli, err := client.NewClientWithOpts(client.FromEnv)
 	if err != nil {
 		log.Println(err)

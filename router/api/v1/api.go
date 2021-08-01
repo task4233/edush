@@ -10,7 +10,6 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/taise-hub/edush/container"
 	"github.com/taise-hub/edush/model"
-	"github.com/taise-hub/edush/shell"
 )
 
 func GetHome(c *gin.Context) {
@@ -47,49 +46,7 @@ func WsCmd(c *gin.Context) {
 	session := sessions.Default(c)
 	id := session.Get("id").(string)
 	room := session.Get("room").(string)
-	spv.Append(id, room, conn)
-	
-	// room := spv.AppendRoom(roomName)
-	// go room.Run()
-	// client, err := spv.AppendClient(id, room, conn)
-	// if err != nil {
-	// 	log.Println(err)
-	// 	return
-	// }
-	// go client.Read()
-	// go client.Write()
-
-	// q := make(chan model.ExecResult)
-	// go func() {
-	// 	for {
-	// 		execResult := StdInListner(conn, id)
-	// 		q <- execResult
-	// 	}
-	// }()
-
-	// for {
-	// 	select {
-	// 	case execResult := <-q:
-	// 		if err := conn.WriteMessage(websocket.TextMessage, execResult.StdOut); err != nil {
-	// 			log.Println(err)
-	// 			return
-	// 		}
-	// 	}
-	// }
-}
-
-func StdInListner(conn *websocket.Conn, id string) model.ExecResult {
-	_, p, err := conn.ReadMessage()
-	if err != nil {
-		log.Println(err)
-		return model.ExecResult{}
-	}
-	execResult, err := shell.CmdExecOnContainer(id, p)
-	if err != nil {
-		log.Println(err)
-		return model.ExecResult{}
-	}
-	return execResult
+	spv.Append(id, room, conn)	
 }
 
 func GetJoin(c *gin.Context) {
