@@ -2,11 +2,9 @@ package model
 
 import (
 	"errors"
-	"log"
 	"github.com/gorilla/websocket"
 )
 
-//clientとroomの監督をする。
 type Supervisor struct {
 	clients map[string]*Client // "SESSID":*Client{}
 	rooms map[string]*Room // "RoomName":*Room{}
@@ -22,7 +20,6 @@ func NewSupervisor() *Supervisor{
 func (spv *Supervisor) Append(clientID, roomName string, conn *websocket.Conn)error {
 	var room *Room
 	var client *Client	
-	
 	if _, exist := spv.rooms[roomName]; !exist {
 		room = NewRoom(roomName)
 		spv.rooms[roomName] = room
@@ -30,23 +27,15 @@ func (spv *Supervisor) Append(clientID, roomName string, conn *websocket.Conn)er
 	}else {
 		room = spv.rooms[roomName]
 	}
-	log.Println(room.Clients)
-	
 	if _, exist := spv.clients[clientID]; !exist {
 		client = NewClient(clientID, conn, room)
 		if success := client.joinRoom(); !success {
 			return errors.New("I'm sorry, but I can only play this game with two people.")
-		} 
+		}
 		spv.clients[clientID] = client
 		go client.read()
-		log.Println("【DEBUG】run go client.read() done.")
 		go client.write()
-		log.Println("【DEBUG】run go client.write() done.")
-		log.Println(client.Room)
 	}
-	log.Println("Supervisor.Append() done.")
-	log.Println(spv.clients)
-	log.Println(spv.rooms)
 	return nil
 }
 

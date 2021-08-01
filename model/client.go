@@ -18,11 +18,11 @@ func NewClient(name string, conn *websocket.Conn, room *Room) *Client {
 		Name: name,
 		Conn: conn,
 		Room: room,
+		Message: make(chan []byte),
 	}
 }
 
 func (c *Client) joinRoom() bool {
-	log.Println(len(c.Room.Clients))
 	if len(c.Room.Clients) < 2 {
 		c.Room.Clients = append(c.Room.Clients, c)
 		return true
@@ -32,23 +32,20 @@ func (c *Client) joinRoom() bool {
 
 func (c *Client) read() {
 	for {
-		if _, msg, err := c.Conn.ReadMessage(); err == nil {
-			c.Room.Forward <- msg
-		} else {
+		_, msg, err := c.Conn.ReadMessage()
+		if err != nil {
+			log.Println(err)
 			break
-		}
+		} 
+		c.Room.Forward <- msg
 	}
-	c.Conn.Close()
 }
 
 func (c *Client) write() {
 	for {
-		select {
-		case msg := <- c.Message:
-			if err := c.Conn.WriteMessage(websocket.TextMessage, msg); err != nil {
-				break
-			}
+		msg := <- c.Message
+		if err := c.Conn.WriteMessage(websocket.TextMessage, msg); err != nil {
+			break
 		}
-		break
 	}
 }

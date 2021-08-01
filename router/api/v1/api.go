@@ -48,8 +48,18 @@ func WsCmd(c *gin.Context) {
 	id := session.Get("id").(string)
 	room := session.Get("room").(string)
 	spv.Append(id, room, conn)
+	
+	// room := spv.AppendRoom(roomName)
+	// go room.Run()
+	// client, err := spv.AppendClient(id, room, conn)
+	// if err != nil {
+	// 	log.Println(err)
+	// 	return
+	// }
+	// go client.Read()
+	// go client.Write()
 
-	//	q := make(chan model.ExecResult)
+	// q := make(chan model.ExecResult)
 	// go func() {
 	// 	for {
 	// 		execResult := StdInListner(conn, id)

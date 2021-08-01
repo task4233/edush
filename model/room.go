@@ -16,11 +16,9 @@ func NewRoom(id string) *Room {
 
 func (r *Room) run() {
 	for {
-		select {
-		case msg := <- r.Forward:
-			for _, client := range r.Clients {
-				client.Message <- msg;
-			}
+		msg:= <- r.Forward
+		for _, client := range r.Clients {
+			client.Message <- msg
 		}
 	}
 }
