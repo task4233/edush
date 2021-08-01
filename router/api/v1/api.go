@@ -37,30 +37,35 @@ var upgrader = websocket.Upgrader{
 	WriteBufferSize: 1024,
 }
 
+var spv = model.NewSupervisor()
+
 func WsCmd(c *gin.Context) {
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
 		log.Println(err)
 	}
-	q := make(chan model.ExecResult)
 	session := sessions.Default(c)
 	id := session.Get("id").(string)
-	go func() {
-		for {
-			execResult := StdInListner(conn, id)
-			q <- execResult
-		}
-	}()
+	room := session.Get("room").(string)
+	spv.Append(id, room, conn)
 
-	for {
-		select {
-		case execResult := <-q:
-			if err := conn.WriteMessage(websocket.TextMessage, execResult.StdOut); err != nil {
-				log.Println(err)
-				return
-			}
-		}
-	}
+	//	q := make(chan model.ExecResult)
+	// go func() {
+	// 	for {
+	// 		execResult := StdInListner(conn, id)
+	// 		q <- execResult
+	// 	}
+	// }()
+
+	// for {
+	// 	select {
+	// 	case execResult := <-q:
+	// 		if err := conn.WriteMessage(websocket.TextMessage, execResult.StdOut); err != nil {
+	// 			log.Println(err)
+	// 			return
+	// 		}
+	// 	}
+	// }
 }
 
 func StdInListner(conn *websocket.Conn, id string) model.ExecResult {
@@ -90,9 +95,12 @@ func PostClientInfo(c *gin.Context) {
 	if session.Get("id") == nil {
 		name := c.PostForm("name")
 		id := name + "-" + uuid.NewString()
-		log.Print(id)
+		room := c.PostForm("room")
+
 		session.Set("id", id)
-		session.Save()	
+		session.Save()
+		session.Set("room", room)
+		session.Save()
 	}
 	c.Redirect(302, "/")
 }
