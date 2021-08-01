@@ -9,7 +9,6 @@ import (
 	"github.com/gin-contrib/sessions"
 	"github.com/gorilla/websocket"
 	"github.com/taise-hub/edush/container"
-	"github.com/taise-hub/edush/judge"
 	"github.com/taise-hub/edush/model"
 	"github.com/taise-hub/edush/shell"
 )
@@ -76,15 +75,6 @@ func StdInListner(conn *websocket.Conn, id string) model.ExecResult {
 		return model.ExecResult{}
 	}
 	return execResult
-}
-
-func Judge(c *gin.Context) {
-	ans := c.PostForm("answer")
-	result := judge.Problem1(ans)
-	c.JSON(200, gin.H{
-		"message": ans,
-		"result":  result,
-	})
 }
 
 func GetJoin(c *gin.Context) {
