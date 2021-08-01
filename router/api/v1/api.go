@@ -9,7 +9,6 @@ import (
 	"github.com/gin-contrib/sessions"
 	"github.com/gorilla/websocket"
 	"github.com/taise-hub/edush/container"
-	"github.com/taise-hub/edush/judge"
 	"github.com/taise-hub/edush/model"
 	"github.com/taise-hub/edush/shell"
 )
@@ -38,30 +37,45 @@ var upgrader = websocket.Upgrader{
 	WriteBufferSize: 1024,
 }
 
+var spv = model.NewSupervisor()
+
 func WsCmd(c *gin.Context) {
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
 		log.Println(err)
 	}
-	q := make(chan model.ExecResult)
 	session := sessions.Default(c)
 	id := session.Get("id").(string)
-	go func() {
-		for {
-			execResult := StdInListner(conn, id)
-			q <- execResult
-		}
-	}()
+	room := session.Get("room").(string)
+	spv.Append(id, room, conn)
+	
+	// room := spv.AppendRoom(roomName)
+	// go room.Run()
+	// client, err := spv.AppendClient(id, room, conn)
+	// if err != nil {
+	// 	log.Println(err)
+	// 	return
+	// }
+	// go client.Read()
+	// go client.Write()
 
-	for {
-		select {
-		case execResult := <-q:
-			if err := conn.WriteMessage(websocket.TextMessage, execResult.StdOut); err != nil {
-				log.Println(err)
-				return
-			}
-		}
-	}
+	// q := make(chan model.ExecResult)
+	// go func() {
+	// 	for {
+	// 		execResult := StdInListner(conn, id)
+	// 		q <- execResult
+	// 	}
+	// }()
+
+	// for {
+	// 	select {
+	// 	case execResult := <-q:
+	// 		if err := conn.WriteMessage(websocket.TextMessage, execResult.StdOut); err != nil {
+	// 			log.Println(err)
+	// 			return
+	// 		}
+	// 	}
+	// }
 }
 
 func StdInListner(conn *websocket.Conn, id string) model.ExecResult {
@@ -78,15 +92,6 @@ func StdInListner(conn *websocket.Conn, id string) model.ExecResult {
 	return execResult
 }
 
-func Judge(c *gin.Context) {
-	ans := c.PostForm("answer")
-	result := judge.Problem1(ans)
-	c.JSON(200, gin.H{
-		"message": ans,
-		"result":  result,
-	})
-}
-
 func GetJoin(c *gin.Context) {
 	session := sessions.Default(c)
 	if session.Get("id") == nil {
@@ -98,11 +103,12 @@ func GetJoin(c *gin.Context) {
 func PostClientInfo(c *gin.Context) {
 	session := sessions.Default(c)
 	if session.Get("id") == nil {
-		name := c.PostForm("name")
-		id := name + "-" + uuid.NewString()
-		log.Print(id)
+		id := c.PostForm("name") + "-" + uuid.NewString()
+		room := c.PostForm("room")
+
 		session.Set("id", id)
-		session.Save()	
+		session.Set("room", room)
+		session.Save()
 	}
 	c.Redirect(302, "/")
 }
