@@ -93,12 +93,10 @@ func GetJoin(c *gin.Context) {
 func PostClientInfo(c *gin.Context) {
 	session := sessions.Default(c)
 	if session.Get("id") == nil {
-		name := c.PostForm("name")
-		id := name + "-" + uuid.NewString()
+		id := c.PostForm("name") + "-" + uuid.NewString()
 		room := c.PostForm("room")
 
 		session.Set("id", id)
-		session.Save()
 		session.Set("room", room)
 		session.Save()
 	}

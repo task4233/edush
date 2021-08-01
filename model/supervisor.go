@@ -1,19 +1,21 @@
 package model
 
 import (
+	"errors"
+	"log"
 	"github.com/gorilla/websocket"
 )
 
 //clientとroomの監督をする。
 type Supervisor struct {
 	clients map[string]*Client // "SESSID":*Client{}
-	room map[string]*Room // "RoomName":*Room{}
+	rooms map[string]*Room // "RoomName":*Room{}
 }
 
 func NewSupervisor() *Supervisor{
 	return &Supervisor{
-		clients: nil,
-		room: nil,
+		clients: make(map[string]*Client),
+		rooms: make(map[string]*Room),
 	}
 }
 
@@ -21,18 +23,30 @@ func (spv *Supervisor) Append(clientID, roomName string, conn *websocket.Conn)er
 	var room *Room
 	var client *Client	
 	
-	if _, exist := spv.room[roomName]; !exist {
+	if _, exist := spv.rooms[roomName]; !exist {
 		room = NewRoom(roomName)
-		spv.room[roomName] = room
+		spv.rooms[roomName] = room
 		go room.run()
+	}else {
+		room = spv.rooms[roomName]
 	}
+	log.Println(room.Clients)
 	
 	if _, exist := spv.clients[clientID]; !exist {
-		client = NewClient(clientID, conn, room)//TODO: roomに入れるのは2人まで
+		client = NewClient(clientID, conn, room)
+		if success := client.joinRoom(); !success {
+			return errors.New("I'm sorry, but I can only play this game with two people.")
+		} 
 		spv.clients[clientID] = client
 		go client.read()
+		log.Println("【DEBUG】run go client.read() done.")
 		go client.write()
+		log.Println("【DEBUG】run go client.write() done.")
+		log.Println(client.Room)
 	}
+	log.Println("Supervisor.Append() done.")
+	log.Println(spv.clients)
+	log.Println(spv.rooms)
 	return nil
 }
 

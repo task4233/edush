@@ -1,6 +1,7 @@
 package model
 
 import (
+	"log"
 	"github.com/gorilla/websocket"
 )
 
@@ -12,14 +13,21 @@ type Client struct {
 	Message chan []byte
 }
 
-
-
 func NewClient(name string, conn *websocket.Conn, room *Room) *Client {
 	return &Client{
 		Name: name,
 		Conn: conn,
 		Room: room,
 	}
+}
+
+func (c *Client) joinRoom() bool {
+	log.Println(len(c.Room.Clients))
+	if len(c.Room.Clients) < 2 {
+		c.Room.Clients = append(c.Room.Clients, c)
+		return true
+	}
+	return false
 }
 
 func (c *Client) read() {
