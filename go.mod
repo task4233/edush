@@ -8,6 +8,7 @@ require (
 	github.com/docker/go-connections v0.4.0
 	github.com/gin-contrib/sessions v0.0.3 // indirect
 	github.com/gin-gonic/gin v1.7.2
+	github.com/go-redis/redis v6.15.9+incompatible // indirect
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/gorilla/websocket v1.4.2
 	github.com/morikuni/aec v1.0.0 // indirect

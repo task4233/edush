@@ -31,13 +31,13 @@ func Run(name string, cli *client.Client) error {
 	return nil
 }
 
-func Exec(name string, cmd string, cli *client.Client) (*bufio.Reader, error) {
+func Exec(name string, cmd string, dir string, cli *client.Client) (*bufio.Reader, error) {
 
 	cmds := []string{"/bin/bash", "-c", cmd}
 	ec := &types.ExecConfig{
 		AttachStdout: true,
 		AttachStderr: true,
-		WorkingDir:   "/",
+		WorkingDir:   dir,
 		Cmd:          cmds,
 	}
 	idResp, err := cli.ContainerExecCreate(context.Background(), name, *ec)
