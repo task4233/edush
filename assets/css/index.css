@@ -46,21 +46,16 @@ nav ul li a {
     padding-right: 20px;
 }
 
-div.split-left {/*左側全体の設定*/
+div.split-left, div.split-right {/*左側全体の設定*/
     background-color: #000000;
     color: white;
 }
 
-.split-left span, .split-left p {
+.split-left span, .split-left p, .split-right span, .split-right p {
     font-family: 'courier new', Futura, Helvetica, '游ゴシック', 'メイリオ', Osaka;
 }
 
-div.split-right {/*右側全体の設定*/
-    width: 30%;
-    background-color: antiquewhite;
-}
-
-.split-left-inner{/*右側の中身の設定*/
+.split-left-inner, .split-right-inner{/*右側の中身の設定*/
     width: calc(100%-20px);
     padding: 14px;
     height: 400px;
@@ -71,13 +66,13 @@ div.split-right {/*右側全体の設定*/
 }
 
 
-#console, .console {
+#console, .console, #console-opponent, .console-opponent {
     color: #7ffE7F;
     display: inline-block;
     margin-right: 6px;
 }
 
-#standard-input, .standard-input {
+#standard-input, .standard-input,#standard-input-opponent, .standard-input-opponent {
     font-family: 'courier new', Futura, Helvetica, '游ゴシック', 'メイリオ', Osaka;
     width: 97%;
     display: block;
@@ -98,7 +93,4 @@ div.split-right {/*右側全体の設定*/
 .result {
     margin-left: 6px;
     display: block;
-}
-.split-right-inner{/*右側の中身の設定*/
-    height: 800px;
 }
