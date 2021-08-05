@@ -15,6 +15,7 @@ import (
 
 
 type ExecResult struct {
+	Cmd    []byte
 	StdOut []byte
 	StdErr []byte
 	Owner  bool

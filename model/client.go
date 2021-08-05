@@ -40,6 +40,7 @@ func (c *Client) read() {
 		}
 		c.Owner = true
 		execResult, err := shell.CmdExecOnContainer(c.Name, p)
+		execResult.Cmd = p
 		c.Room.Forward <- execResult
 	}
 }
