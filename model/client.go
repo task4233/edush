@@ -7,11 +7,11 @@ import (
 )
 
 type Client struct {
-
 	Name string
 	Conn *websocket.Conn
 	Room *Room
 	Message chan shell.ExecResult
+	Owner bool
 }
 
 func NewClient(name string, conn *websocket.Conn, room *Room) *Client {
@@ -38,6 +38,7 @@ func (c *Client) read() {
 			log.Println(err)
 			break
 		}
+		c.Owner = true
 		execResult, err := shell.CmdExecOnContainer(c.Name, p)
 		c.Room.Forward <- execResult
 	}
@@ -46,8 +47,14 @@ func (c *Client) read() {
 func (c *Client) write() {
 	for {
 		execResult := <- c.Message
-		if err := c.Conn.WriteMessage(websocket.TextMessage, execResult.StdOut); err != nil {
+		if c.Owner == true {
+			execResult.Owner = true
+		}else {
+			execResult.Owner = false
+		}
+		if err := c.Conn.WriteJSON(execResult); err != nil {
 			break
 		}
+		c.Owner = false
 	}
 }

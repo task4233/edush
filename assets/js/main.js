@@ -3,10 +3,10 @@ url = 'ws://'+document.location.host + "/ws";
 conn = new WebSocket(url);
 
 conn.onmessage = function(event){
+    console.log(event.data)
     var si = document.getElementById("standard-input");
     var messages = event.data.split('\n');
     for (var i=messages.length-1; i> -1; i--) {
-        console.log(messages[i]);
         var item = document.createElement("span");
         item.setAttribute("class", "result");
         item.innerText = messages[i];
