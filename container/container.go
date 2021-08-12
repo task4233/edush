@@ -1,6 +1,7 @@
 package container
 
 import (
+	"fmt"
 	"bufio"
 	"context"
 	"github.com/docker/docker/api/types"
@@ -32,7 +33,8 @@ func Run(name string, cli *client.Client) error {
 }
 
 func Exec(name string, cmd string, dir string, cli *client.Client) (*bufio.Reader, error) {
-
+	cmd += " && echo \"\" && pwd"// Chase current directory...
+	fmt.Println(cmd)
 	cmds := []string{"/bin/bash", "-c", cmd}
 	ec := &types.ExecConfig{
 		AttachStdout: true,

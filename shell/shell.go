@@ -23,19 +23,19 @@ type ExecResult struct {
 
 func CmdExecOnContainer(name string, p []byte) (ExecResult, error) {
 	var execResult ExecResult
+	var outBuf, errBuf bytes.Buffer
 	cli, err := client.NewClientWithOpts(client.FromEnv)
 	if err != nil {
 		log.Println(err)
 		return execResult, err
 	}
+
 	dir := GetCurrentDirecotry(name)
-	log.Print(fmt.Sprintf("%s", p))
 	reader, err := container.Exec(name, fmt.Sprintf("%s", p), dir, cli)
 	if err != nil {
 		log.Println(err)
 		return execResult, err
 	}
-	var outBuf, errBuf bytes.Buffer
 	outputDone := make(chan error)
 	go func() {
 		_, err := stdcopy.StdCopy(&outBuf, &errBuf, reader)
@@ -58,33 +58,21 @@ func CmdExecOnContainer(name string, p []byte) (ExecResult, error) {
 		log.Println(err)
 		return execResult, err
 	}
+	i := strings.LastIndex(string(stdout), "\n")
+	if i > -1 {
+		stdout = stdout[:strings.LastIndex(string(stdout), "\n")]
+	}
+	j := strings.LastIndex(string(stdout), "\n")
+	if j > -1 {
+		pwd := string(stdout[j+1:])
+		stdout = stdout[:j]
+		SetCurrentDirectory(name, pwd)
+		fmt.Printf("【DEBUG】pwd: %v\n", pwd)
+	}
 
-	fmt.Printf("stdout: %v\n", string(stdout))
-	fmt.Printf("stderr: %v\n", string(stderr))
 	execResult.StdOut = stdout
 	execResult.StdErr = stderr
-
 	return execResult, nil
-}
-
-func ChangeDirectory(key ,newdir string) error {
-
-	client := redis.Connect(0)
-	olddir, err := client.Get(key).Result()
-	if err != nil {
-		log.Print(err)
-		return err
-	}
-	switch {
-	case newdir[0:1] == "./":
-		directory := olddir + newdir[1:]
-		return client.Set(key, directory, 0).Err()
-	case newdir[0:2] == "../":
-		index := strings.Index(Reverse(olddir), "/")
-		directory := olddir[:len(olddir)-index-1] + newdir[2:]
-		return client.Set(key, directory, 0).Err()
-	}
-	return nil
 }
 
 func GetCurrentDirecotry(key string) string {
@@ -92,18 +80,13 @@ func GetCurrentDirecotry(key string) string {
 	directory, err := client.Get(key).Result()
 	if err != nil {
 		log.Print(err)
+		client.Set(key, "/", 0)
 		return "/"
 	}
 	return directory
 }
 
-func Reverse(s string) string {
-
-    runes := []rune(s)
-
-    for i, j := 0, len(runes)-1; i < j; i, j = i+1, j-1 {
-        runes[i], runes[j] = runes[j], runes[i]
-    }
-
-    return string(runes)
+func SetCurrentDirectory(key, pwd string) {
+	client := redis.Connect(0)
+	client.Set(key, pwd, 0)
 }
