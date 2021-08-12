@@ -14,9 +14,9 @@ conn.onmessage = function(event){
             item.innerText = messages[i];
             si.after(item);
         }
-        changeTargetLeft();//4
-        changeReadOnlyLeft();
-        newLineLeft();//6
+        changeTarget("left");//4
+        changeRead("left");
+        newLine("left");//6
     }
     else {
         var si = document.getElementById("standard-input-right");
@@ -27,9 +27,9 @@ conn.onmessage = function(event){
             item.innerText = messages[i];
             si.after(item);
         }
-        changeTargetRight();//4
-        changeReadOnlyRight();
-        newLineRight()
+        changeTarget("right");//4
+        changeRead("right");
+        newLine("right")
     }
 }
 
@@ -76,18 +76,25 @@ function newLineLeft() {
     input.focus();
 }
 
-function newLineRight() {
-    var list = document.getElementsByClassName("terminal")[1];
+function newLine(mode) {
+    switch(mode) {
+        case 'left':
+            var list = document.getElementsByClassName("terminal")[0];
+            break
+        case 'right':
+            var list = document.getElementsByClassName("terminal")[1];
+            break
+    }
     var li = document.createElement("li");
     var span = document.createElement("span");
-    span.setAttribute("id", "console-right");
+    span.setAttribute("id", "console-" + mode);
     var console = document.createTextNode("$");
     span.appendChild(console);
     var input = document.createElement("input");
     input.setAttribute("type", "text");
-    input.setAttribute("id", "standard-input-right");
+    input.setAttribute("id", "standard-input-" + mode);
     input.setAttribute("spellcheck", "false");
-    input.readOnly = true;
+    if (mode=='right') input.readOnly = true;
     li.appendChild(span);
     li.appendChild(input);
     list.appendChild(li);
@@ -95,38 +102,18 @@ function newLineRight() {
     input.focus();
 }
 
-
-function changeTargetLeft() {
-    var console = document.getElementById("console-left");
+function changeTarget(mode) {
+    var console = document.getElementById("console-" + mode);
     console.removeAttribute("id");
-    console.setAttribute("class", "console-left");
+    console.setAttribute("class", "console-" + mode);
 
-    var si = document.getElementById("standard-input-left");
+    var si = document.getElementById("standard-input-" + mode);
     si.removeAttribute("id");
-    si.setAttribute("class","standard-input-left");
+    si.setAttribute("class","standard-input-" +  mode);
 }
 
-function changeTargetRight() {
-    var console = document.getElementById("console-right");
-    console.removeAttribute("id");
-    console.setAttribute("class", "console-right");
-
-    var si = document.getElementById("standard-input-right");
-    si.removeAttribute("id");
-    si.setAttribute("class","standard-input-right");
-}
-
-
-function changeReadOnlyLeft() {
-    var standardInputs = document.getElementsByClassName("standard-input-left");
-    for (var i = 0; i < standardInputs.length; i++) {
-        var si = standardInputs[i];
-        si.readOnly = true;
-    }
-}
-
-function changeReadOnlyRight() {
-    var standardInputs = document.getElementsByClassName("standard-input-right");
+function changeRead(mode) {
+    var standardInputs = document.getElementsByClassName("standard-input-" + mode);
     for (var i = 0; i < standardInputs.length; i++) {
         var si = standardInputs[i];
         si.readOnly = true;
