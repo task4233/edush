@@ -15,8 +15,10 @@ import (
 
 
 type ExecResult struct {
+	Cmd    []byte
 	StdOut []byte
 	StdErr []byte
+	Owner  bool
 }
 
 func CmdExecOnContainer(name string, p []byte) (ExecResult, error) {
