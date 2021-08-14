@@ -125,5 +125,5 @@ function clear() {
     while( terminal.firstChild ){
         terminal.removeChild( terminal.firstChild );
       }
-    newLine();
+    newLine('left');
 }
