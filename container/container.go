@@ -1,7 +1,7 @@
 package container
 
 import (
-	"fmt"
+	"log"
 	"bufio"
 	"context"
 	"github.com/docker/docker/api/types"
@@ -16,16 +16,19 @@ func IsContainerExists(name string, cli *client.Client) bool {
 
 func Run(name string, cli *client.Client) error {
 	cc := &container.Config{
-		Image: "nginx",
+		Image: "q1", //とりあえず。
+		Tty: true,
 	}
 	hc := &container.HostConfig{
 		AutoRemove: true,
 	}
 	body, err := cli.ContainerCreate(context.Background(), cc, hc, nil, nil, name)
 	if err != nil {
+		 log.Println(err)
 		return err
 	}
 	if err := cli.ContainerStart(context.Background(), body.ID, types.ContainerStartOptions{}); err != nil {
+		log.Println(err)
 		return err
 	}
 
@@ -33,8 +36,7 @@ func Run(name string, cli *client.Client) error {
 }
 
 func Exec(name string, cmd string, dir string, cli *client.Client) (*bufio.Reader, error) {
-	cmd += " && echo \"\" && pwd"// Chase current directory...
-	fmt.Println(cmd)
+	cmd += " && echo \"\" && pwd"// Chase current directory
 	cmds := []string{"/bin/bash", "-c", cmd}
 	ec := &types.ExecConfig{
 		AttachStdout: true,

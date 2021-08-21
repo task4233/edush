@@ -16,7 +16,7 @@ func NewSupervisor() *Supervisor{
 		rooms: make(map[string]*Room),
 	}
 }
-
+//WARN: ルームの保存方法の検討
 func (spv *Supervisor) Append(clientID, roomName string, conn *websocket.Conn)error {
 	var room *Room
 	var client *Client	
