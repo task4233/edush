@@ -9,33 +9,39 @@
     </style>
 </head>
 <body>
-    <nav>
+    <!-- <nav>
       <ul>
-        <li><a href="#">Home</a></li>
         <li><a href="#">Hoge</a></li>
-        <li><a href="#">Fooo!!!!!!</a></li>
+        <li><a href="#">Fuga</a></li>
+        <li><a href="#"></a></li>
       </ul>
-    </nav>
+    </nav> -->
+    <div class="question">
+        <p class="question-title">問題</p>
+        <p class="question-paper">
+           あなたはS社のIT部門で働いています。S社のIT部門では、ITシステムの運用や管理を行なっています。20XX年X月X日XX時ごろ、S社のWebサーバに対して大量のトラフィックが発生していることがわかりました。攻撃の可能性があると捉えたIT部門のAさんはあなたにWebサーバのログ(/tmp/access-log.txt)の調査を依頼しました。攻撃者と思われるIPアドレスを特定して、総アクセス回数を回答してください。
+        </p>
+    </div>
+    <div class="split">    
+        <div class="split-item split-left">
+            <div class="split-left-inner">
+                <ul class="terminal">
+                    <li>
+                        <span id="console-left">$</span><input type="text" id="standard-input-left" spellcheck="false">
+                    </li>
+                </ul>
+            </div>
+        </div>
         <div class="split">    
-            <div class="split-item split-left">
-                <div class="split-left-inner">
+            <div class="split-item split-right">
+                <div class="split-right-inner">
                     <ul class="terminal">
                         <li>
-                            <span id="console-left">$</span><input type="text" id="standard-input-left" spellcheck="false">
+                            <span id="console-right">$</span><input type="text" id="standard-input-right" spellcheck="false">
                         </li>
                     </ul>
                 </div>
             </div>
-            <div class="split">    
-                <div class="split-item split-right">
-                    <div class="split-right-inner">
-                        <ul class="terminal">
-                            <li>
-                                <span id="console-right">$</span><input type="text" id="standard-input-right" spellcheck="false">
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-        </div>
+    </div>
 </body>
 </html>

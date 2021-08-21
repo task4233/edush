@@ -5,7 +5,8 @@
 
 html, body {
     width: 100%;
-    height: 100%;    
+    height: 100%;
+    word-break: break-all;
 }
 
 
@@ -31,6 +32,28 @@ nav ul li a {
     font-weight: bold;
     padding: 20px;
 }
+
+.question {
+    text-align: center;
+    background-color: #ffffff;
+    padding: 10px;
+}
+
+.question-title {
+    text-align: center;
+    font-weight: bold;
+    font-size: 2em;
+}
+
+.question-paper{
+    color: #000000;
+    font-weight: 600;
+    margin-left: 20%;
+    margin-right: 20%;
+    font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    padding: 20px;
+}
+
 
 .split {
     display: table;
@@ -58,7 +81,7 @@ div.split-left, div.split-right {/*左側全体の設定*/
 .split-left-inner, .split-right-inner{/*右側の中身の設定*/
     width: calc(100%-20px);
     padding: 14px;
-    height: 400px;
+    height: 600px;
     border-style: solid;
     border-color: whitesmoke;
     border-width: 2px;
